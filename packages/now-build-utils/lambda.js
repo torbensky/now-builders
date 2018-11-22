@@ -1,7 +1,7 @@
 const assert = require('assert');
 const { ZipFile } = require('yazl');
 const streamToBuffer = require('./fs/stream-to-buffer.js');
-
+//
 class Lambda {
   constructor({
     zipBuffer, handler, runtime, environment,
