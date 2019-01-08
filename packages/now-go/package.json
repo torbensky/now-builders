@@ -1,6 +1,6 @@
 {
   "name": "@torbensky/go",
-  "version": "0.2.12-canary-modvendor",
+  "version": "0.2.12-canary-modvendor.1",
   "license": "MIT",
   "scripts": {
     "test": "best -I test/*.js",
