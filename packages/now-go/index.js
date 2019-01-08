@@ -91,28 +91,14 @@ exports.build = async ({ files, entrypoint, config }) => {
   // so now we place `main.go` together with the user code
   await writeFile(path.join(entrypointDirname, mainGoFileName), mainGoContents);
 
-  console.log('installing dependencies');
-  // `go get` will look at `*.go` (note we set `cwd`), parse
-  // the `import`s and download any packages that aren't part of the stdlib
-  try {
-    await execa(goBin, ['get'], {
-      env: goEnv,
-      cwd: entrypointDirname,
-      stdio: 'inherit',
-    });
-  } catch (err) {
-    console.log('failed to `go get`');
-    throw err;
-  }
-
   console.log('running go build...');
   try {
     await execa(
       goBin,
       [
         'build',
-        '-o',
         ...(config.UseModVendoring ? ['-mod=vendor'] : []),
+        '-o',
         path.join(outDir, 'handler'),
         path.join(entrypointDirname, mainGoFileName),
         downloadedFiles[entrypoint].fsPath,
