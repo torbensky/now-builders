@@ -21,7 +21,7 @@ exports.config = {
   maxLambdaSize: '10mb',
 };
 
-exports.build = async ({ files, entrypoint }) => {
+exports.build = async ({ files, entrypoint, config }) => {
   console.log('downloading files...');
 
   const gitPath = await getWritableDirectory();
@@ -112,6 +112,7 @@ exports.build = async ({ files, entrypoint }) => {
       [
         'build',
         '-o',
+        ...(config.UseModVendoring ? ['-mod=vendor'] : []),
         path.join(outDir, 'handler'),
         path.join(entrypointDirname, mainGoFileName),
         downloadedFiles[entrypoint].fsPath,
