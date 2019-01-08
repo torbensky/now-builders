@@ -21,12 +21,16 @@ exports.config = {
   maxLambdaSize: '10mb',
 };
 
-exports.build = async ({ files, entrypoint }) => {
+exports.build = async ({ files, entrypoint, config }) => {
   console.log('downloading files...');
 
   const gitPath = await getWritableDirectory();
   const goPath = await getWritableDirectory();
-  const srcPath = path.join(goPath, 'src', 'lambda');
+  const srcPath = path.join(
+    goPath,
+    'src',
+    config.goPathBaseDir ? config.goPathBaseDir : 'lambda',
+  );
   const outDir = await getWritableDirectory();
 
   await createGoPathTree(goPath);
@@ -90,20 +94,6 @@ exports.build = async ({ files, entrypoint }) => {
   // Go doesn't like to build files in different directories,
   // so now we place `main.go` together with the user code
   await writeFile(path.join(entrypointDirname, mainGoFileName), mainGoContents);
-
-  console.log('installing dependencies');
-  // `go get` will look at `*.go` (note we set `cwd`), parse
-  // the `import`s and download any packages that aren't part of the stdlib
-  try {
-    await execa(goBin, ['get'], {
-      env: goEnv,
-      cwd: entrypointDirname,
-      stdio: 'inherit',
-    });
-  } catch (err) {
-    console.log('failed to `go get`');
-    throw err;
-  }
 
   console.log('running go build...');
   try {
