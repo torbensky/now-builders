@@ -140,16 +140,8 @@ exports.build = async ({ files, entrypoint, config }) => {
    */
   console.log(`checking dependencies of ${entrypointDirname}`);
   const vendorDir = path.join(entrypointDirname, 'vendor');
-  console.log('syncing dependencies');
-  try {
-    await execa(goBin, ['mod', 'vendor'], {
-      env: goEnv,
-      cwd: entrypointDirname,
-      stdio: 'inherit'
-    });
-  } catch (err) {
-    console.log('failed to vendor dependencies');
-    throw err;
+  if (!fs.existsSync(vendorDir)) {
+    console.log('WARNING: "vendor" directory not found. If you have dependencies, make sure you using vendoring and that they arent ignored by `.nowignore`');
   }
 
   /*
