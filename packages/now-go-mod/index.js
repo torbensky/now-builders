@@ -1,5 +1,3 @@
-/* eslint-disable comma-dangle */
-/* eslint-disable quotes */
 const path = require('path');
 const { mkdirp, readFile, writeFile } = require('fs-extra');
 const fs = require('fs');
@@ -22,7 +20,10 @@ async function createGoPathTree(goPath) {
 
 exports.config = {
   maxLambdaSize: '10mb',
+  // Where be *all* the lambdas?
+  // this builder only looks for lambda code in what I've called the "lambda base directory"
   lambdaBaseDir: 'cmd',
+  // within the base directory, only files with a special name are considered lambdas
   lambdaFileName: 'lambda.go'
 };
 
@@ -137,66 +138,58 @@ exports.build = async ({ files, entrypoint, config }) => {
   /*
    * Install dependencies
    */
-  console.log('entrypoint listing:');
-  // eslint-disable-next-line arrow-parens
-  fs.readdirSync(entrypointDirname).forEach(file => {
-    console.log(file);
-  });
   console.log(`checking dependencies of ${entrypointDirname}`);
   const vendorDir = path.join(entrypointDirname, 'vendor');
-  if (!fs.existsSync(vendorDir)) {
-    console.log(`vendor directory '${vendorDir}'`);
-    try {
-      await execa(goBin, ['mod', 'vendor'], {
-        env: goEnv,
-        cwd: entrypointDirname,
-        stdio: 'inherit'
-      });
-    } catch (err) {
-      console.log('failed to vendor dependencies');
-      throw err;
-    }
-  } else {
-    console.log('vendoring found');
-  }
-
-  /*
-   * Find Go lambda source files
-   */
-  const lambdasDir = path.join(entrypointDirname, config.lambdaBaseDir);
-  console.log(
-    `finding lambdas named ${config.lambdaFileName} in ${lambdasDir}`
-  );
-  if (!fs.existsSync(lambdasDir)) {
-    throw new Error(`lambda directory ${lambdasDir} not found`);
-  }
-  const goLambdaFiles = Object.keys(
-    await glob(`**/${config.lambdaFileName}`, lambdasDir)
-  );
-
-  /*
-   * Build all Go lambdas
-   */
-  console.log(`building ${goLambdaFiles.length} lambdas`);
-  const lambdas = {};
-  // eslint-disable-next-line no-restricted-syntax
-  for (const f of goLambdaFiles) {
-    const lambdaEntryPoint = path.join(
-      path.dirname(entrypoint),
-      config.lambdaBaseDir,
-      f
-    );
-    // TODO: Replace this because it uses the `go.mod` instead of the `lambdas_dir/f`
-    path.join();
-    // eslint-disable-next-line no-await-in-loop
-    lambdas[lambdaEntryPoint] = await buildGoLambda({
-      goBin,
-      goEnv,
-      downloadedFiles,
-      outDir,
-      entrypoint: lambdaEntryPoint
+  console.log('syncing dependencies');
+  try {
+    await execa(goBin, ['mod', 'vendor'], {
+      env: goEnv,
+      cwd: entrypointDirname,
+      stdio: 'inherit'
     });
+  } catch (err) {
+    console.log('failed to vendor dependencies');
+    throw err;
   }
+}
 
-  return lambdas;
+/*
+ * Find Go lambda source files (configurable)
+ */
+const lambdasDir = path.join(entrypointDirname, config.lambdaBaseDir);
+console.log(
+  `finding lambdas named ${config.lambdaFileName} in ${lambdasDir}`
+);
+if (!fs.existsSync(lambdasDir)) {
+  throw new Error(`lambda directory ${lambdasDir} not found`);
+}
+const goLambdaFiles = Object.keys(
+  await glob(`**/${config.lambdaFileName}`, lambdasDir)
+);
+
+/*
+ * Build all Go lambdas
+ */
+console.log(`building ${goLambdaFiles.length} lambdas`);
+const lambdas = {};
+// eslint-disable-next-line no-restricted-syntax
+for (const f of goLambdaFiles) {
+  const lambdaEntryPoint = path.join(
+    path.dirname(entrypoint),
+    config.lambdaBaseDir,
+    f
+  );
+  // TODO: Replace this because it uses the `go.mod` instead of the `lambdas_dir/f`
+  path.join();
+  // eslint-disable-next-line no-await-in-loop
+  lambdas[lambdaEntryPoint] = await buildGoLambda({
+    goBin,
+    goEnv,
+    downloadedFiles,
+    outDir,
+    entrypoint: lambdaEntryPoint
+  });
+}
+
+return lambdas;
 };
