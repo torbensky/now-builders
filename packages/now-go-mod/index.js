@@ -151,45 +151,44 @@ exports.build = async ({ files, entrypoint, config }) => {
     console.log('failed to vendor dependencies');
     throw err;
   }
-}
 
-/*
- * Find Go lambda source files (configurable)
- */
-const lambdasDir = path.join(entrypointDirname, config.lambdaBaseDir);
-console.log(
-  `finding lambdas named ${config.lambdaFileName} in ${lambdasDir}`
-);
-if (!fs.existsSync(lambdasDir)) {
-  throw new Error(`lambda directory ${lambdasDir} not found`);
-}
-const goLambdaFiles = Object.keys(
-  await glob(`**/${config.lambdaFileName}`, lambdasDir)
-);
-
-/*
- * Build all Go lambdas
- */
-console.log(`building ${goLambdaFiles.length} lambdas`);
-const lambdas = {};
-// eslint-disable-next-line no-restricted-syntax
-for (const f of goLambdaFiles) {
-  const lambdaEntryPoint = path.join(
-    path.dirname(entrypoint),
-    config.lambdaBaseDir,
-    f
+  /*
+   * Find Go lambda source files (configurable)
+   */
+  const lambdasDir = path.join(entrypointDirname, config.lambdaBaseDir);
+  console.log(
+    `finding lambdas named ${config.lambdaFileName} in ${lambdasDir}`
   );
-  // TODO: Replace this because it uses the `go.mod` instead of the `lambdas_dir/f`
-  path.join();
-  // eslint-disable-next-line no-await-in-loop
-  lambdas[lambdaEntryPoint] = await buildGoLambda({
-    goBin,
-    goEnv,
-    downloadedFiles,
-    outDir,
-    entrypoint: lambdaEntryPoint
-  });
-}
+  if (!fs.existsSync(lambdasDir)) {
+    throw new Error(`lambda directory ${lambdasDir} not found`);
+  }
+  const goLambdaFiles = Object.keys(
+    await glob(`**/${config.lambdaFileName}`, lambdasDir)
+  );
 
-return lambdas;
+  /*
+   * Build all Go lambdas
+   */
+  console.log(`building ${goLambdaFiles.length} lambdas`);
+  const lambdas = {};
+  // eslint-disable-next-line no-restricted-syntax
+  for (const f of goLambdaFiles) {
+    const lambdaEntryPoint = path.join(
+      path.dirname(entrypoint),
+      config.lambdaBaseDir,
+      f
+    );
+    // TODO: Replace this because it uses the `go.mod` instead of the `lambdas_dir/f`
+    path.join();
+    // eslint-disable-next-line no-await-in-loop
+    lambdas[lambdaEntryPoint] = await buildGoLambda({
+      goBin,
+      goEnv,
+      downloadedFiles,
+      outDir,
+      entrypoint: lambdaEntryPoint
+    });
+  }
+
+  return lambdas;
 };
