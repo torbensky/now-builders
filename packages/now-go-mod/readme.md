@@ -1,6 +1,6 @@
 # Why another Zeit Now Go builder
 
-The current builder is an "alpha" and has several limitations that have made it impossible for me to build some projects. After trying a few tweaks to that builder, I felt that there was an opportunity for a new builder that would handle the type of projects I build as a Go developer.
+The official builder is an alpha and has several limitations that have made it impossible for me to build some projects. After trying a few tweaks to that builder, I felt that there was an opportunity for a new builder that would handle the type of projects I build as a Go developer.
 
 The builder takes advantage of Go Modules to do dependency management. This greatly improves the efficiency of the dependency installation. If an existing `vendor` directory is found the builder will use that.
 

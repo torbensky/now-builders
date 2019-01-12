@@ -20,11 +20,6 @@ async function createGoPathTree(goPath) {
 
 exports.config = {
   maxLambdaSize: '10mb',
-  // Where be *all* the lambdas?
-  // this builder only looks for lambda code in what I've called the "lambda base directory"
-  lambdaBaseDir: 'cmd',
-  // within the base directory, only files with a special name are considered lambdas
-  lambdaFileName: 'lambda.go'
 };
 
 async function buildGoLambda({
@@ -102,6 +97,14 @@ async function buildGoLambda({
 }
 
 exports.build = async ({ files, entrypoint, config }) => {
+  const options = Object.assign({
+    // Where be *all* the lambdas?
+    // this builder only looks for lambda code in what I've called the "lambda base directory"
+    lambdaBaseDir: "cmd",
+    // within the base directory, only files with a special name are considered lambdas
+    lambdaFileName: "lambda.go"
+  }, config);
+
   /*
    * Setup Go build environment
    */
@@ -147,15 +150,15 @@ exports.build = async ({ files, entrypoint, config }) => {
   /*
    * Find Go lambda source files (configurable)
    */
-  const lambdasDir = path.join(entrypointDirname, config.lambdaBaseDir);
+  const lambdasDir = path.join(entrypointDirname, options.lambdaBaseDir);
   console.log(
-    `finding lambdas named ${config.lambdaFileName} in ${lambdasDir}`
+    `finding lambdas named ${options.lambdaFileName} in ${lambdasDir}`
   );
   if (!fs.existsSync(lambdasDir)) {
     throw new Error(`lambda directory ${lambdasDir} not found`);
   }
   const goLambdaFiles = Object.keys(
-    await glob(`**/${config.lambdaFileName}`, lambdasDir)
+    await glob(`**/${options.lambdaFileName}`, lambdasDir)
   );
 
   /*
@@ -167,7 +170,7 @@ exports.build = async ({ files, entrypoint, config }) => {
   for (const f of goLambdaFiles) {
     const lambdaEntryPoint = path.join(
       path.dirname(entrypoint),
-      config.lambdaBaseDir,
+      options.lambdaBaseDir,
       f
     );
     // TODO: Replace this because it uses the `go.mod` instead of the `lambdas_dir/f`
